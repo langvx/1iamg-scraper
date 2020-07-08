@@ -6,7 +6,7 @@
 .pnp.js
 credentials.json
 token.json
-
+zim2.json
 # testing
 /coverage
 
