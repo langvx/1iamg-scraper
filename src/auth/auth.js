@@ -1,11 +1,11 @@
 const fs = require("fs");
 const readline = require("readline");
 const { google } = require("googleapis");
-const express = require("express");
+// var createTextVersion = require("textversionjs");
+var cheerio = require("cheerio");
 var base64 = require("js-base64").Base64;
 
 let filter = "from:ZIM Books <norep@zim.vn> is:unread";
-let limitFilter = 5;
 let userId = "me";
 
 // If modifying these scopes, delete token.json.
@@ -81,6 +81,31 @@ function getNewToken(oAuth2Client, callback) {
 }
 
 /**
+ * Returns the text from a HTML string
+ *
+ * @param {html} String The html string
+ */
+
+function change_alias(alias) {
+  var str = alias;
+  str = str.toLowerCase();
+  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
+  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
+  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
+  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
+  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
+  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
+  str = str.replace(/đ/g, "d");
+  str = str.replace(
+    /!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
+    " "
+  );
+  str = str.replace(/ + /g, " ");
+  str = str.trim();
+  return str;
+}
+
+/**
  * Lists the labels in the user's account.
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
@@ -92,7 +117,7 @@ function scrapingMails(auth) {
     {
       userId: userId,
       q: filter,
-      maxResults: 1,
+      maxResults: 5,
     },
     (err, res) => {
       if (!err) {
@@ -111,13 +136,39 @@ function scrapingMails(auth) {
             },
             (err, res) => {
               if (!err) {
-                const temp = res.data.payload.body.data;
-                let extracted = base64.decode(
-                  temp.replace(/-/g, "+").replace(/_/g, "/")
+                const rawData = res.data.payload.body.data;
+                let dataEncoded = base64.decode(
+                  rawData
+                    .replace(/-/g, "+")
+                    .replace(/_/g, "/")
+                    .replace(/\s/g, "")
                 );
-                console.log("------------------------------------");
-                console.log(extracted);
-                console.log("------------------------------------");
+                // const textVersion = createTextVersion(dataEncoded);
+                var $ = cheerio.load(dataEncoded, { decodeEntities: false });
+                let orderId = $("td#header_wrapper")
+                  .find("> h1")
+                  .text()
+                  .replace("New Order: ", "")
+                  .replace("Order Failed: ", "");
+                let addressNodes = $("address.address").html().split("<br>");
+                let addressArr = [];
+                addressNodes.forEach((o) => {
+                  addressArr.push(o.trim());
+                });
+                // change_alias(addressArr[0]);
+                // console.log(textVersion);
+                // console.log(addressArr);
+                console.log("Order ID: " + orderId);
+                for (let i = 0; i < addressArr.length; i++) {
+                  if (addressArr[i].includes("</a>")) {
+                    addressArr[i] = addressArr[i]
+                      .split("tel:")[1]
+                      .split('"')[0];
+                    // console.log("true, it's: " + addressArr[i]);
+                  }
+                  console.log("address Data: " + addressArr[i]);
+                }
+                console.log("========================================");
               } else {
                 console.log("Wrong! " + err);
               }
