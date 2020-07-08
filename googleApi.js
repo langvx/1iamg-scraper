@@ -12,5 +12,5 @@ function callAPI() {
 
 module.exports = {
   setAuth,
-  callApi,
+  callAPI,
 };
