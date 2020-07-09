@@ -5,8 +5,11 @@ const { google } = require("googleapis");
 var cheerio = require("cheerio");
 var base64 = require("js-base64").Base64;
 
-let filter = "from:ZIM Books <norep@zim.vn> is:unread";
-let userId = "me";
+const { filter, limit, id } = require("./data");
+
+// const filterWith = "from:ZIM Books <norep@zim.vn> is:unread";
+// const orderLimitIn = 200;
+// const userId = "me";
 
 // If modifying these scopes, delete token.json.
 const SCOPES = [
@@ -81,43 +84,20 @@ function getNewToken(oAuth2Client, callback) {
 }
 
 /**
- * Returns the text from a HTML string
- *
- * @param {html} String The html string
- */
-
-function change_alias(alias) {
-  var str = alias;
-  str = str.toLowerCase();
-  str = str.replace(/à|á|ạ|ả|ã|â|ầ|ấ|ậ|ẩ|ẫ|ă|ằ|ắ|ặ|ẳ|ẵ/g, "a");
-  str = str.replace(/è|é|ẹ|ẻ|ẽ|ê|ề|ế|ệ|ể|ễ/g, "e");
-  str = str.replace(/ì|í|ị|ỉ|ĩ/g, "i");
-  str = str.replace(/ò|ó|ọ|ỏ|õ|ô|ồ|ố|ộ|ổ|ỗ|ơ|ờ|ớ|ợ|ở|ỡ/g, "o");
-  str = str.replace(/ù|ú|ụ|ủ|ũ|ư|ừ|ứ|ự|ử|ữ/g, "u");
-  str = str.replace(/ỳ|ý|ỵ|ỷ|ỹ/g, "y");
-  str = str.replace(/đ/g, "d");
-  str = str.replace(
-    /!|@|%|\^|\*|\(|\)|\+|\=|\<|\>|\?|\/|,|\.|\:|\;|\'|\"|\&|\#|\[|\]|~|\$|_|`|-|{|}|\||\\/g,
-    " "
-  );
-  str = str.replace(/ + /g, " ");
-  str = str.trim();
-  return str;
-}
-
-/**
  * Lists the labels in the user's account.
  *
  * @param {google.auth.OAuth2} auth An authorized OAuth2 client.
  */
 
+var count = 0;
+
 function scrapingMails(auth) {
   const gmail = google.gmail({ version: "v1", auth });
   gmail.users.messages.list(
     {
-      userId: userId,
+      userId: id,
       q: filter,
-      maxResults: 5,
+      maxResults: limit,
     },
     (err, res) => {
       if (!err) {
@@ -130,7 +110,7 @@ function scrapingMails(auth) {
           // console.log(`ID returned: ${m}`);
           gmail.users.messages.get(
             {
-              userId: userId,
+              userId: id,
               id: m,
               format: "full",
             },
@@ -149,7 +129,8 @@ function scrapingMails(auth) {
                   .find("> h1")
                   .text()
                   .replace("New Order: ", "")
-                  .replace("Order Failed: ", "");
+                  .replace("Order Failed: ", "")
+                  .replace("Order Cancelled: ", "");
                 let addressNodes = $("address.address").html().split("<br>");
                 let addressArr = [];
                 addressNodes.forEach((o) => {
@@ -158,7 +139,11 @@ function scrapingMails(auth) {
                 // change_alias(addressArr[0]);
                 // console.log(textVersion);
                 // console.log(addressArr);
-                console.log("Order ID: " + orderId);
+                if (addressArr.length > 5) {
+                  addressArr[1] = addressArr[1] + " | " + addressArr[2];
+                  // console.log("duplicated here: " + addressArr[2]);
+                  addressArr.splice(2, 1);
+                }
                 for (let i = 0; i < addressArr.length; i++) {
                   if (addressArr[i].includes("</a>")) {
                     addressArr[i] = addressArr[i]
@@ -166,9 +151,26 @@ function scrapingMails(auth) {
                       .split('"')[0];
                     // console.log("true, it's: " + addressArr[i]);
                   }
-                  console.log("address Data: " + addressArr[i]);
+                  // console.log("address Data: " + addressArr[i]);
                 }
-                console.log("========================================");
+                count++;
+                console.log(
+                  "=========================INDEX: " +
+                    count +
+                    "======================="
+                );
+                console.log("Order ID: " + orderId);
+                console.log("name: " + addressArr[0]);
+                console.log("address: " + addressArr[1]);
+                console.log("country: " + addressArr[2]);
+                console.log("phone: " + addressArr[3]);
+                console.log("email: " + addressArr[4]);
+                console.log(
+                  "========================================================="
+                );
+                console.log(
+                  "-                                                       -"
+                );
               } else {
                 console.log("Wrong! " + err);
               }
