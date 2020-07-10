@@ -210,13 +210,13 @@ function scrapingMails(auth) {
                     productList.push($(e).text().trim());
                   });
                 // Strip material from product
-                let material = "";
+                let material = [];
                 for (let i = 0; i < productList.length; i++) {
                   if (productList[i].includes(hardbook)) {
-                    material += hardbook;
+                    material.push(hardbook);
                   }
                   if (productList[i].includes(softbook)) {
-                    material += softbook + " + ";
+                    material.push(softbook);
                   }
                 }
                 // const cloneProduct = productList.slice();
@@ -306,35 +306,35 @@ function scrapingMails(auth) {
 
                 //
                 count++;
-                // console.log(
-                //   "=========================INDEX: " +
-                //     count +
-                //     "======================="
-                // );
-                // console.log("date order: " + dateFormated);
-                // console.log("order Id: " + orderId);
-                // console.log("name: " + addressArr[0]);
-                // console.log("address: " + addressArr[1]);
-                // console.log("country: " + addressArr[2]);
-                // console.log("phone: " + addressArr[3]);
-                // console.log("email: " + addressArr[4]);
-                // // console.log("product: " + temporaryArray);
-                // console.log("product: " + productList);
-                // console.log("material: " + material);
-                // console.log("total quantity: " + totalQuantity);
-                // console.log(`Subtotal: ${Subtotal}`);
-                // console.log(`Discount: ${disCount}`);
-                // console.log(`Shipping: ${shipPing}`);
-                // console.log(`Payment method: ${Paymentmethod}`);
-                // console.log(`Total: ${totalCost}`);
-                // console.log(`Note: ${note}`);
-                // // console.log(paymentClone);
-                // console.log(
-                //   "========================================================="
-                // );
-                // console.log(
-                //   "-                                                       -"
-                // );
+                console.log(
+                  "=========================INDEX: " +
+                    count +
+                    "======================="
+                );
+                console.log("date order: " + dateFormated);
+                console.log("order Id: " + orderId);
+                console.log("name: " + addressArr[0]);
+                console.log("address: " + addressArr[1]);
+                console.log("country: " + addressArr[2]);
+                console.log("phone: " + addressArr[3]);
+                console.log("email: " + addressArr[4]);
+                // console.log("product: " + temporaryArray);
+                console.log("product: " + productList);
+                console.log("material: " + material);
+                console.log("total quantity: " + totalQuantity);
+                console.log(`Subtotal: ${Subtotal}`);
+                console.log(`Discount: ${disCount}`);
+                console.log(`Shipping: ${shipPing}`);
+                console.log(`Payment method: ${Paymentmethod}`);
+                console.log(`Total: ${totalCost}`);
+                console.log(`Note: ${note}`);
+                // console.log(paymentClone);
+                console.log(
+                  "========================================================="
+                );
+                console.log(
+                  "-                                                       -"
+                );
                 //Save DATA to Google Spreadsheets
                 sheet.spreadsheets.values.append(
                   {
@@ -349,7 +349,7 @@ function scrapingMails(auth) {
                           addressArr[0],
                           addressArr[3],
                           addressArr[4],
-                          material,
+                          material.toString(),
                           Paymentmethod,
                           people,
                           productList.toString(),
@@ -364,7 +364,7 @@ function scrapingMails(auth) {
                           "",
                           "",
                           "",
-                          addressArr[1] + " | " + addressArr[2],
+                          addressArr[1] + " | " + addressArr[2] + "|" + note,
                         ],
                       ],
                     },
@@ -374,6 +374,21 @@ function scrapingMails(auth) {
                       // function
                       console.log(
                         "Data has been pushed to your Spreadsheets! "
+                      );
+                      // remove Unread Tag
+                      gmail.users.threads.modify(
+                        {
+                          userId: id,
+                          id: m,
+                          removeLabelIds: ["UNREAD"],
+                        },
+                        (err, res) => {
+                          if (!err) {
+                            console.log("Mark as Read email: SUCESS");
+                          } else {
+                            console.log("An error caused! " + err);
+                          }
+                        }
                       );
                     } else {
                       console.log("An error caused! " + err);

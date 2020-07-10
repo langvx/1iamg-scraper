@@ -1,10 +1,26 @@
 const userId = "me";
+//
+//
+//
+// ======================================================
+//              DECALRE YOUR INPUT DATA HERE
+// ======================================================
+// Find list of emails from Filter
 const filterWith = "from:ZIM Books <norep@zim.vn> is:unread";
-const orderLimitIn = 5;
-
+// How many emails you want to collect ?
+const orderLimitIn = 1;
+// Put the id of Spreadsheet file here, plz
 const toFileWithId = "1yl1D0YsMFoDIxSPVKfZptfMXvKaLgn0pzTijLUPmyvE";
+// Input range, sheets name here to pass data collected
 const range = "DonDangKy!A2:U";
+// Who are you?
 const whoIsThere = "Huong Lan";
+// ======================================================
+// ------------------------------------------------------
+// ======================================================
+//
+//
+//
 const sourceFrom = "";
 let payDate = "";
 let fillForm = "";
